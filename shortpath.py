@@ -32,7 +32,7 @@ class ShortestPath(app_manager.RyuApp):
         parser = datapath.ofproto_parser
         msg = ev.msg
         dpid = datapath.id
-        self.datapaths[dpid] = datapath
+        self.datapaths[dpid] = datapath        
 
         # install table-miss flow entry
         match = parser.OFPMatch()
@@ -43,7 +43,8 @@ class ShortestPath(app_manager.RyuApp):
         ignore_match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IPV6)
         ignore_actions = []
         self.add_flow(datapath, 65534, ignore_match, ignore_actions)
-         def add_flow(self, dp, p, match, actions, idle_timeout=0, hard_timeout=0):
+
+    def add_flow(self, dp, p, match, actions, idle_timeout=0, hard_timeout=0):
         ofproto = dp.ofproto
         parser = dp.ofproto_parser
 
@@ -88,7 +89,7 @@ class ShortestPath(app_manager.RyuApp):
     def arp_forwarding(self, msg, src_ip, dst_ip):
         """ Send ARP packet to the destination host,
             if the dst host record is existed,
-                        else, flow it to the unknow access port.
+            else, flow it to the unknow access port.
         """
         datapath = msg.datapath
         ofproto = datapath.ofproto
@@ -134,7 +135,7 @@ class ShortestPath(app_manager.RyuApp):
         parser = datapath.ofproto_parser
 
         for dpid in self.arp_handler.access_ports:
-                    for port in self.arp_handler.access_ports[dpid]:
+            for port in self.arp_handler.access_ports[dpid]:
                 if (dpid, port) not in self.arp_handler.access_table.keys():
                     datapath = self.datapaths[dpid]
                     out = self._build_packet_out(
@@ -158,7 +159,8 @@ class ShortestPath(app_manager.RyuApp):
                 # Path has already calculated, just get it.
                 to_dst_match = parser.OFPMatch(
                     eth_type = eth_type, ipv4_dst = ip_dst)
-                port_no = self.arp_handler.set_shortest_path(ip_src, ip_dst, src_sw, dst_sw, to_dst_port, to_dst_matc>                self.send_packet_out(datapath, msg.buffer_id, in_port, port_no, msg.data)
+                port_no = self.arp_handler.set_shortest_path(ip_src, ip_dst, src_sw, dst_sw, to_dst_port, to_dst_match)
+                self.send_packet_out(datapath, msg.buffer_id, in_port, port_no, msg.data)
         return
 
     def get_sw(self, dpid, in_port, src, dst):
@@ -190,5 +192,3 @@ class ShortestPath(app_manager.RyuApp):
                                      src_port, dst_port, data)
         if out:
             datapath.send_msg(out)
-
-        
