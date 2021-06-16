@@ -199,14 +199,14 @@ class ArpHandler(app_manager.RyuApp):
                 for i in range(len(spath)-1):
                     tmp_delay = tmp_delay + self.graph[spath[i]][spath[i+1]]['delay']
                     # print path[i], path[i+1], self.graph[path[i]][path[i+1]]['delay']
-                print (ip_src + ' ->'),
-                print (spath),
-                print ("-> " + ip_dst),
+                print (ip_src + ' ->')
+                print (spath)
+                print ("-> " + ip_dst)
                 print ("     delay: " + str(tmp_delay))
             print ("Shortest path from " + ip_src + " to " + ip_dst +'is:')
-            print (ip_src + ' ->'),
+            print (ip_src + ' ->')
             for sw in path:
-                print (str(sw) + ' ->'),
+                print (str(sw) + ' ->')
             print (ip_dst)
         if len(path) == 1:
             dp = self.get_datapath(src_dpid)
