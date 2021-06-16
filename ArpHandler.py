@@ -206,7 +206,7 @@ class ArpHandler(app_manager.RyuApp):
             print ("Shortest path from " + ip_src + " to " + ip_dst +'is:')
             print (ip_src + ' ->'),
             for sw in path:
-                print str(sw) + ' ->',
+                print (str(sw) + ' ->'),
             print (ip_dst)
         if len(path) == 1:
             dp = self.get_datapath(src_dpid)
