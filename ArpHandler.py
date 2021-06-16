@@ -185,10 +185,10 @@ class ArpHandler(app_manager.RyuApp):
             self.logger.info("Get path failed.")
             return 0
         if self.get_host_location(ip_src)[0] == src_dpid:
-            print ("path from " + ip_src + " to " + ip_dst +':')
-            print (ip_src + ' ->'),
+            print "path from " + ip_src + " to " + ip_dst +':'
+            print ip_src + ' ->',
             for sw in path:
-                print (str(sw) + ' ->'),
+                print str(sw) + ' ->',
             print ip_dst
         if len(path) == 1:
             dp = self.get_datapath(src_dpid)
