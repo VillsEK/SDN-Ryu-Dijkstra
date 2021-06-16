@@ -16,6 +16,7 @@ from ryu.topology.api import get_all_switch, get_link, get_switch
 from ryu.lib.ofp_pktinfilter import packet_in_filter, RequiredTypeFilter
 
 import networkx as nx
+import random
 
 class ArpHandler(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -24,6 +25,7 @@ class ArpHandler(app_manager.RyuApp):
         super(ArpHandler, self).__init__(*args, **kwargs)
         self.topology_api_app = self
         self.link_to_port = {}       # (src_dpid,dst_dpid)->(src_port,dst_port)
+        self.link_delay = {}
         self.access_table = {}       # {(sw,port) :[host1_ip]}
         self.switch_port_table = {}  # dpip->port_num
         self.access_ports = {}       # dpid->port_num
@@ -91,9 +93,14 @@ class ArpHandler(app_manager.RyuApp):
             dst_dpid = link.dst.dpid
             src_port = link.src.port_no
             dst_port = link.dst.port_no
+            if (src_dpid, dst_dpid) not in self.link_delay.keys():
+                x = random.randint(1, 501)
+                self.link_delay[(src_dpid, dst_dpid)] = x
+                self.link_delay[(dst_dpid, src_dpid)] = x
             self.graph.add_edge(src_dpid, dst_dpid,
                                 src_port=src_port,
-                                dst_port=dst_port)
+                                dst_port=dst_port,
+                                delay=self.link_delay[(src_dpid, dst_dpid)])
         return self.graph
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -178,17 +185,28 @@ class ArpHandler(app_manager.RyuApp):
                           pre_actions=[]
                           ):
         if nx.has_path(self.graph, src_dpid, dst_dpid):
-            path = nx.shortest_path(self.graph, src_dpid, dst_dpid)
+            path = nx.shortest_path(self.graph, src_dpid, dst_dpid, weight="delay")
         else:
             path = None
         if path is None:
             self.logger.info("Get path failed.")
             return 0
         if self.get_host_location(ip_src)[0] == src_dpid:
-            print ("path from " + ip_src + " to " + ip_dst +':')
+            paths = nx.all_shortest_paths(self.graph, src_dpid, dst_dpid)
+            print ("All the shortest from " + ip_src + " to " + ip_dst + " are:")
+            for spath in paths:
+                tmp_delay = 0
+                for i in range(len(spath)-1):
+                    tmp_delay = tmp_delay + self.graph[spath[i]][spath[i+1]]['delay']
+                    # print path[i], path[i+1], self.graph[path[i]][path[i+1]]['delay']
+                print (ip_src + ' ->'),
+                print (spath),
+                print ("-> " + ip_dst),
+                print ("     delay: " + str(tmp_delay))
+            print ("Shortest path from " + ip_src + " to " + ip_dst +'is:')
             print (ip_src + ' ->'),
             for sw in path:
-                print (str(sw) + ' ->'),
+                print str(sw) + ' ->',
             print (ip_dst)
         if len(path) == 1:
             dp = self.get_datapath(src_dpid)
